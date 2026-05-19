@@ -63,7 +63,9 @@ async def on_upgrade_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
             payload=payload,
             currency="XTR",
             prices=prices,
-            subscription_period=STARS_SUBSCRIPTION_PERIOD,
+            # subscription_period aún no es parámetro nombrado en PTB; lo pasamos
+            # vía api_kwargs hasta que lo añadan.
+            api_kwargs={"subscription_period": STARS_SUBSCRIPTION_PERIOD},
         )
     except Exception as e:
         log.exception("Error enviando factura: %s", e)
