@@ -125,11 +125,17 @@ def back_to_menu():
     ])
 
 
-def upgrade_options(checkout_pro: str, checkout_shop: str):
-    rows = []
-    if checkout_pro:
-        rows.append([InlineKeyboardButton("⭐ Plan Pro · 4,99€/mes", url=checkout_pro)])
-    if checkout_shop:
-        rows.append([InlineKeyboardButton("🏪 Plan Tiendas · 29€/mes", url=checkout_shop)])
-    rows.append([InlineKeyboardButton("⬅️ Volver al menú", callback_data="back:menu")])
+def upgrade_options(pro_stars: int, shop_stars: int):
+    """Botones que disparan el envío de factura con Telegram Stars."""
+    rows = [
+        [InlineKeyboardButton(
+            f"⭐ Plan Pro · {pro_stars} stars/mes",
+            callback_data="upgrade:pro",
+        )],
+        [InlineKeyboardButton(
+            f"🏪 Plan Tiendas · {shop_stars} stars/mes",
+            callback_data="upgrade:shop",
+        )],
+        [InlineKeyboardButton("⬅️ Volver al menú", callback_data="back:menu")],
+    ]
     return _kb(rows)

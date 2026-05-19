@@ -17,7 +17,7 @@ from telegram.ext import (
 import db
 import formatting
 import logic
-from config import LEMON_SQUEEZY_CHECKOUT_URL_PRO, LEMON_SQUEEZY_CHECKOUT_URL_SHOP
+from config import STARS_PRO_PRICE, STARS_SHOP_PRICE
 from handlers import keyboards as kb
 from handlers.states import (
     MENU, USE_PROFILE, WEIGHT, DISCIPLINE, BIKE_TYPE, TERRAIN,
@@ -422,12 +422,13 @@ async def _finish_setup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def _show_paywall(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "🚧 *Has llegado al límite del plan gratuito* (3 consultas este mes).\n\n"
-        "Pásate al *Plan Pro* y tendrás consultas ilimitadas, perfiles guardados y nuevas funciones."
+        "Pásate al *Plan Pro* y tendrás consultas ilimitadas durante 30 días. "
+        "Pago con Telegram Stars sin salir del chat."
     )
     await _send(
         update,
         text,
-        reply_markup=kb.upgrade_options(LEMON_SQUEEZY_CHECKOUT_URL_PRO, LEMON_SQUEEZY_CHECKOUT_URL_SHOP),
+        reply_markup=kb.upgrade_options(STARS_PRO_PRICE, STARS_SHOP_PRICE),
         parse_mode=ParseMode.MARKDOWN,
     )
 
@@ -504,7 +505,7 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         text,
         parse_mode=ParseMode.MARKDOWN,
-        reply_markup=kb.upgrade_options(LEMON_SQUEEZY_CHECKOUT_URL_PRO, LEMON_SQUEEZY_CHECKOUT_URL_SHOP),
+        reply_markup=kb.upgrade_options(STARS_PRO_PRICE, STARS_SHOP_PRICE),
     )
 
 

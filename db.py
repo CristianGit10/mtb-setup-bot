@@ -22,10 +22,26 @@ def _current_month_key() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m")
 
 
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _parse_ts(ts) -> Optional[datetime]:
+    if not ts:
+        return None
+    if isinstance(ts, datetime):
+        return ts if ts.tzinfo else ts.replace(tzinfo=timezone.utc)
+    try:
+        return datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
 def get_or_create_user(telegram_user_id: int, username: Optional[str] = None, first_name: Optional[str] = None) -> dict:
     res = supabase().table("users").select("*").eq("telegram_user_id", telegram_user_id).execute()
     if res.data:
-        return res.data[0]
+        user = res.data[0]
+        return _check_and_expire_plan(user)
     new_user = {
         "telegram_user_id": telegram_user_id,
         "username": username,
@@ -41,8 +57,21 @@ def get_or_create_user(telegram_user_id: int, username: Optional[str] = None, fi
 def get_user(telegram_user_id: int) -> Optional[dict]:
     res = supabase().table("users").select("*").eq("telegram_user_id", telegram_user_id).execute()
     if res.data:
-        return res.data[0]
+        return _check_and_expire_plan(res.data[0])
     return None
+
+
+def _check_and_expire_plan(user: dict) -> dict:
+    """Si el plan Pro/Shop venció, lo revierte a free. Mutates and returns user."""
+    if user.get("plan") not in ("pro", "shop"):
+        return user
+    exp = _parse_ts(user.get("plan_renewal_at"))
+    if exp and exp < datetime.now(timezone.utc):
+        supabase().table("users").update({"plan": "free"}).eq(
+            "telegram_user_id", user["telegram_user_id"]
+        ).execute()
+        user["plan"] = "free"
+    return user
 
 
 PROFILE_FIELDS = (
@@ -59,7 +88,7 @@ def save_profile(telegram_user_id: int, profile: dict) -> None:
     update = {k: profile[k] for k in PROFILE_FIELDS if k in profile and profile[k] is not None}
     if not update:
         return
-    update["profile_updated_at"] = datetime.now(timezone.utc).isoformat()
+    update["profile_updated_at"] = _now_iso()
     supabase().table("users").update(update).eq("telegram_user_id", telegram_user_id).execute()
 
 
@@ -97,18 +126,10 @@ def increment_query_count(telegram_user_id: int) -> None:
         }).eq("telegram_user_id", telegram_user_id).execute()
 
 
-def activate_plan(telegram_user_id: int, plan: str, subscription_id: str = None, customer_id: str = None, renewal_at: str = None) -> None:
-    update = {"plan": plan}
-    if subscription_id:
-        update["lemon_squeezy_subscription_id"] = subscription_id
-    if customer_id:
-        update["lemon_squeezy_customer_id"] = customer_id
-    if renewal_at:
-        update["plan_renewal_at"] = renewal_at
-    supabase().table("users").update(update).eq("telegram_user_id", telegram_user_id).execute()
-
-
-def deactivate_plan_by_subscription(subscription_id: str) -> None:
-    supabase().table("users").update({"plan": "free"}).eq(
-        "lemon_squeezy_subscription_id", subscription_id
-    ).execute()
+def activate_stars_plan(telegram_user_id: int, plan: str, charge_id: str, expires_at: datetime) -> None:
+    """Activa plan Pro o Shop tras un pago con Telegram Stars."""
+    supabase().table("users").update({
+        "plan": plan,
+        "telegram_stars_charge_id": charge_id,
+        "plan_renewal_at": expires_at.astimezone(timezone.utc).isoformat(),
+    }).eq("telegram_user_id", telegram_user_id).execute()

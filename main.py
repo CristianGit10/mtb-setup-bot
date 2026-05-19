@@ -7,7 +7,7 @@ import uvicorn
 from telegram.ext import Application
 
 from config import TELEGRAM_BOT_TOKEN, PORT
-from handlers import conversation
+from handlers import conversation, payments
 from webhook import app as fastapi_app
 
 
@@ -26,6 +26,7 @@ async def run() -> None:
         Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     )
     conversation.register(application)
+    payments.register(application)
 
     # Webhook server
     server = uvicorn.Server(

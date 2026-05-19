@@ -31,8 +31,14 @@ create table if not exists users (
     shop_prefix text,                    -- prefijo personalizado plan tiendas
 
     profile_updated_at timestamptz,
-    created_at timestamptz default now()
+    created_at timestamptz default now(),
+
+    -- Telegram Stars
+    telegram_stars_charge_id text
 );
 
 create index if not exists users_lemon_subscription_idx
     on users (lemon_squeezy_subscription_id);
+
+-- Migración por si la tabla ya existía sin la columna
+alter table users add column if not exists telegram_stars_charge_id text;
