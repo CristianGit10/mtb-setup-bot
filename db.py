@@ -26,22 +26,10 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _parse_ts(ts) -> Optional[datetime]:
-    if not ts:
-        return None
-    if isinstance(ts, datetime):
-        return ts if ts.tzinfo else ts.replace(tzinfo=timezone.utc)
-    try:
-        return datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
-    except ValueError:
-        return None
-
-
 def get_or_create_user(telegram_user_id: int, username: Optional[str] = None, first_name: Optional[str] = None) -> dict:
     res = supabase().table("users").select("*").eq("telegram_user_id", telegram_user_id).execute()
     if res.data:
-        user = res.data[0]
-        return _check_and_expire_plan(user)
+        return res.data[0]
     new_user = {
         "telegram_user_id": telegram_user_id,
         "username": username,
@@ -57,21 +45,8 @@ def get_or_create_user(telegram_user_id: int, username: Optional[str] = None, fi
 def get_user(telegram_user_id: int) -> Optional[dict]:
     res = supabase().table("users").select("*").eq("telegram_user_id", telegram_user_id).execute()
     if res.data:
-        return _check_and_expire_plan(res.data[0])
+        return res.data[0]
     return None
-
-
-def _check_and_expire_plan(user: dict) -> dict:
-    """Si el plan Pro/Shop venció, lo revierte a free. Mutates and returns user."""
-    if user.get("plan") not in ("pro", "shop"):
-        return user
-    exp = _parse_ts(user.get("plan_renewal_at"))
-    if exp and exp < datetime.now(timezone.utc):
-        supabase().table("users").update({"plan": "free"}).eq(
-            "telegram_user_id", user["telegram_user_id"]
-        ).execute()
-        user["plan"] = "free"
-    return user
 
 
 PROFILE_FIELDS = (
@@ -126,10 +101,10 @@ def increment_query_count(telegram_user_id: int) -> None:
         }).eq("telegram_user_id", telegram_user_id).execute()
 
 
-def activate_stars_plan(telegram_user_id: int, plan: str, charge_id: str, expires_at: datetime) -> None:
-    """Activa plan Pro o Shop tras un pago con Telegram Stars."""
+def activate_lifetime_plan(telegram_user_id: int, plan: str, charge_id: str) -> None:
+    """Activa plan Pro o Shop de por vida tras un pago con Telegram Stars."""
     supabase().table("users").update({
         "plan": plan,
         "telegram_stars_charge_id": charge_id,
-        "plan_renewal_at": expires_at.astimezone(timezone.utc).isoformat(),
+        "plan_renewal_at": None,  # lifetime: sin caducidad
     }).eq("telegram_user_id", telegram_user_id).execute()

@@ -422,7 +422,7 @@ async def _finish_setup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def _show_paywall(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "🚧 *Has llegado al límite del plan gratuito* (3 consultas este mes).\n\n"
-        "Pásate al *Plan Pro* y tendrás consultas ilimitadas durante 30 días. "
+        "Pásate al *Plan Pro de por vida* — un único pago, consultas ilimitadas para siempre. "
         "Pago con Telegram Stars sin salir del chat."
     )
     await _send(
@@ -492,15 +492,8 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     plan = user.get("plan", "free")
     if plan in ("pro", "shop"):
-        exp = user.get("plan_renewal_at")
-        exp_txt = ""
-        if exp:
-            try:
-                exp_txt = f"\nRenovación: *{exp[:10]}*"
-            except Exception:
-                pass
         await update.message.reply_text(
-            f"⭐ Estás en el plan *{plan.upper()}*. Consultas ilimitadas.{exp_txt}",
+            f"⭐ Estás en el plan *{plan.upper()} LIFETIME*. Consultas ilimitadas para siempre.",
             parse_mode=ParseMode.MARKDOWN,
         )
         return
@@ -520,9 +513,8 @@ async def cmd_upgrade(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Atajo para ver el paywall sin agotar consultas gratis."""
     await update.message.reply_text(
         "⭐ *Pásate a Pro con Telegram Stars*\n\n"
-        "Pago dentro del chat, sin tarjetas ni redirects. Suscripción mensual que "
-        "puedes cancelar en cualquier momento desde Telegram → Ajustes → "
-        "Bots y Mini Apps → Mis Suscripciones.",
+        "Un *único pago* de por vida. Sin suscripciones, sin renovaciones. "
+        "Pago dentro del chat con Stars, sin tarjetas ni redirects.",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=kb.upgrade_options(STARS_PRO_PRICE, STARS_SHOP_PRICE),
     )
