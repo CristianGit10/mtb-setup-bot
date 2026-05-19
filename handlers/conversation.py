@@ -492,8 +492,15 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     plan = user.get("plan", "free")
     if plan in ("pro", "shop"):
+        exp = user.get("plan_renewal_at")
+        exp_txt = ""
+        if exp:
+            try:
+                exp_txt = f"\nRenovación: *{exp[:10]}*"
+            except Exception:
+                pass
         await update.message.reply_text(
-            f"⭐ Estás en el plan *{plan.upper()}*. Consultas ilimitadas. ¡A disfrutar!",
+            f"⭐ Estás en el plan *{plan.upper()}*. Consultas ilimitadas.{exp_txt}",
             parse_mode=ParseMode.MARKDOWN,
         )
         return
@@ -504,6 +511,18 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(
         text,
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=kb.upgrade_options(STARS_PRO_PRICE, STARS_SHOP_PRICE),
+    )
+
+
+async def cmd_upgrade(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Atajo para ver el paywall sin agotar consultas gratis."""
+    await update.message.reply_text(
+        "⭐ *Pásate a Pro con Telegram Stars*\n\n"
+        "Pago dentro del chat, sin tarjetas ni redirects. Suscripción mensual que "
+        "puedes cancelar en cualquier momento desde Telegram → Ajustes → "
+        "Bots y Mini Apps → Mis Suscripciones.",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=kb.upgrade_options(STARS_PRO_PRICE, STARS_SHOP_PRICE),
     )
@@ -554,3 +573,4 @@ def register(app: Application) -> None:
     app.add_handler(build_conversation())
     app.add_handler(CommandHandler("perfil", cmd_profile))
     app.add_handler(CommandHandler("plan", cmd_plan))
+    app.add_handler(CommandHandler("upgrade", cmd_upgrade))
