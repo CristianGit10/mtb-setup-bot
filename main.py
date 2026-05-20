@@ -4,11 +4,26 @@ import logging
 import signal
 
 import uvicorn
+from telegram import BotCommand
 from telegram.ext import Application
 
 from config import TELEGRAM_BOT_TOKEN, PORT
 from handlers import conversation, payments
 from webhook import app as fastapi_app
+
+
+BOT_COMMANDS = [
+    BotCommand("start", "Configurar mi bici"),
+    BotCommand("perfil", "Ver mi perfil guardado"),
+    BotCommand("plan", "Ver mi plan y consultas restantes"),
+    BotCommand("upgrade", "Pasar a Pro (pago único de por vida)"),
+    BotCommand("paysupport", "Soporte de pagos"),
+    BotCommand("cancel", "Cancelar la conversación actual"),
+]
+
+
+async def _post_init(application: Application) -> None:
+    await application.bot.set_my_commands(BOT_COMMANDS)
 
 
 logging.basicConfig(
@@ -23,7 +38,7 @@ async def run() -> None:
         raise RuntimeError("Falta TELEGRAM_BOT_TOKEN en el entorno")
 
     application: Application = (
-        Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+        Application.builder().token(TELEGRAM_BOT_TOKEN).post_init(_post_init).build()
     )
     conversation.register(application)
     payments.register(application)
