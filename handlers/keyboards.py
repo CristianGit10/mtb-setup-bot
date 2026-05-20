@@ -125,16 +125,12 @@ def back_to_menu():
     ])
 
 
-def upgrade_options(pro_stars: int, shop_stars: int):
-    """Botones que disparan el envío de factura con Telegram Stars (pago único)."""
+def upgrade_options(pro_stars: int):
+    """Botón que dispara el envío de factura con Telegram Stars (pago único)."""
     rows = [
         [InlineKeyboardButton(
             f"⭐ Pro de por vida · {pro_stars} stars",
             callback_data="upgrade:pro",
-        )],
-        [InlineKeyboardButton(
-            f"🏪 Tiendas de por vida · {shop_stars} stars",
-            callback_data="upgrade:shop",
         )],
         [InlineKeyboardButton("⬅️ Volver al menú", callback_data="back:menu")],
     ]

@@ -14,12 +14,7 @@ from telegram.ext import (
 )
 
 import db
-from config import (
-    INVOICE_PAYLOAD_PRO,
-    INVOICE_PAYLOAD_SHOP,
-    STARS_PRO_PRICE,
-    STARS_SHOP_PRICE,
-)
+from config import INVOICE_PAYLOAD_PRO, STARS_PRO_PRICE
 from handlers import keyboards as kb
 
 log = logging.getLogger(__name__)
@@ -28,37 +23,18 @@ log = logging.getLogger(__name__)
 # ---------- envío de factura ----------
 
 async def on_upgrade_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Disparado cuando el usuario pulsa 'Pro/Tiendas' en el paywall."""
+    """Disparado cuando el usuario pulsa 'Pro' en el paywall."""
     q = update.callback_query
     await q.answer()
-    plan = q.data.split(":", 1)[1]  # "pro" o "shop"
-
-    if plan == "pro":
-        title = "MTB Setup Bot — Pro de por vida"
-        description = (
-            "Consultas ilimitadas para siempre. Un único pago, sin renovaciones."
-        )
-        prices = [LabeledPrice("Pro lifetime", STARS_PRO_PRICE)]
-        payload = INVOICE_PAYLOAD_PRO
-    elif plan == "shop":
-        title = "MTB Setup Bot — Tiendas de por vida"
-        description = (
-            "Consultas ilimitadas y prefijo personalizado para tu tienda. "
-            "Un único pago, sin renovaciones."
-        )
-        prices = [LabeledPrice("Tiendas lifetime", STARS_SHOP_PRICE)]
-        payload = INVOICE_PAYLOAD_SHOP
-    else:
-        return
 
     try:
         await context.bot.send_invoice(
             chat_id=update.effective_chat.id,
-            title=title,
-            description=description,
-            payload=payload,
+            title="MTB Setup Bot — Pro de por vida",
+            description="Consultas ilimitadas para siempre. Un único pago, sin renovaciones.",
+            payload=INVOICE_PAYLOAD_PRO,
             currency="XTR",
-            prices=prices,
+            prices=[LabeledPrice("Pro lifetime", STARS_PRO_PRICE)],
         )
     except Exception as e:
         log.exception("Error enviando factura: %s", e)
@@ -73,7 +49,7 @@ async def on_upgrade_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def on_pre_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Telegram pregunta si aceptamos el pago antes de cobrar."""
     q = update.pre_checkout_query
-    if q.invoice_payload in (INVOICE_PAYLOAD_PRO, INVOICE_PAYLOAD_SHOP):
+    if q.invoice_payload == INVOICE_PAYLOAD_PRO:
         await q.answer(ok=True)
     else:
         await q.answer(ok=False, error_message="Producto no reconocido.")
@@ -86,28 +62,22 @@ async def on_successful_payment(update: Update, context: ContextTypes.DEFAULT_TY
     payment = update.message.successful_payment
     user_id = update.effective_user.id
 
-    if payment.invoice_payload == INVOICE_PAYLOAD_PRO:
-        plan = "pro"
-        label = "Pro lifetime"
-    elif payment.invoice_payload == INVOICE_PAYLOAD_SHOP:
-        plan = "shop"
-        label = "Tiendas lifetime"
-    else:
+    if payment.invoice_payload != INVOICE_PAYLOAD_PRO:
         log.warning("Pago con payload desconocido: %s", payment.invoice_payload)
         return
 
     db.activate_lifetime_plan(
         user_id,
-        plan=plan,
+        plan="pro",
         charge_id=payment.telegram_payment_charge_id,
     )
 
-    log.info("Plan lifetime %s activado para %s", plan, user_id)
+    log.info("Plan Pro lifetime activado para %s", user_id)
 
     await update.message.reply_text(
-        f"⭐ *¡{label} activado!*\n\n"
-        f"Tu plan es de por vida. Consultas ilimitadas, sin renovaciones.\n"
-        f"Disfruta 🤙",
+        "⭐ *¡Pro lifetime activado!*\n\n"
+        "Tu plan es de por vida. Consultas ilimitadas, sin renovaciones.\n"
+        "Disfruta 🤙",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=kb.back_to_menu(),
     )
@@ -129,7 +99,7 @@ async def cmd_paysupport(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ---------- registro ----------
 
 def register(app: Application) -> None:
-    app.add_handler(CallbackQueryHandler(on_upgrade_click, pattern=r"^upgrade:(pro|shop)$"))
+    app.add_handler(CallbackQueryHandler(on_upgrade_click, pattern=r"^upgrade:pro$"))
     app.add_handler(PreCheckoutQueryHandler(on_pre_checkout))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, on_successful_payment))
     app.add_handler(CommandHandler("paysupport", cmd_paysupport))

@@ -73,7 +73,7 @@ def has_saved_profile(user: dict) -> bool:
 
 def can_make_query(user: dict) -> tuple[bool, int]:
     """Devuelve (puede_consultar, consultas_restantes_si_aplica)."""
-    if user.get("plan") in ("pro", "shop"):
+    if user.get("plan") == "pro":
         return True, -1
     month_key = _current_month_key()
     if user.get("month_key") != month_key:
@@ -87,7 +87,7 @@ def increment_query_count(telegram_user_id: int) -> None:
     user = get_user(telegram_user_id)
     if not user:
         return
-    if user.get("plan") in ("pro", "shop"):
+    if user.get("plan") == "pro":
         return
     month_key = _current_month_key()
     if user.get("month_key") != month_key:

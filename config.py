@@ -14,9 +14,7 @@ FREE_MONTHLY_QUERIES = 3
 
 # --- Pagos con Telegram Stars (currency code XTR) ---
 # Pago ÚNICO de por vida. 1 star ≈ $0.013 USD ≈ €0.012.
-STARS_PRO_PRICE = int(os.getenv("STARS_PRO_PRICE", "2000"))    # ≈ €25 (lifetime Pro)
-STARS_SHOP_PRICE = int(os.getenv("STARS_SHOP_PRICE", "5000"))  # ≈ €65 (lifetime Tiendas)
+STARS_PRO_PRICE = int(os.getenv("STARS_PRO_PRICE", "250"))  # ≈ €4 (lifetime Pro)
 
-# Identificadores del payload de la factura (para distinguir pro vs shop)
+# Identificador del payload de la factura
 INVOICE_PAYLOAD_PRO = "lifetime:pro"
-INVOICE_PAYLOAD_SHOP = "lifetime:shop"

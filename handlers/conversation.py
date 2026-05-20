@@ -17,7 +17,7 @@ from telegram.ext import (
 import db
 import formatting
 import logic
-from config import STARS_PRO_PRICE, STARS_SHOP_PRICE
+from config import STARS_PRO_PRICE
 from handlers import keyboards as kb
 from handlers.states import (
     MENU, USE_PROFILE, WEIGHT, DISCIPLINE, BIKE_TYPE, TERRAIN,
@@ -428,7 +428,7 @@ async def _show_paywall(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await _send(
         update,
         text,
-        reply_markup=kb.upgrade_options(STARS_PRO_PRICE, STARS_SHOP_PRICE),
+        reply_markup=kb.upgrade_options(STARS_PRO_PRICE),
         parse_mode=ParseMode.MARKDOWN,
     )
 
@@ -491,7 +491,7 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         update.effective_user.first_name,
     )
     plan = user.get("plan", "free")
-    if plan in ("pro", "shop"):
+    if plan == "pro":
         await update.message.reply_text(
             f"⭐ Estás en el plan *{plan.upper()} LIFETIME*. Consultas ilimitadas para siempre.",
             parse_mode=ParseMode.MARKDOWN,
@@ -505,7 +505,7 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         text,
         parse_mode=ParseMode.MARKDOWN,
-        reply_markup=kb.upgrade_options(STARS_PRO_PRICE, STARS_SHOP_PRICE),
+        reply_markup=kb.upgrade_options(STARS_PRO_PRICE),
     )
 
 
@@ -516,7 +516,7 @@ async def cmd_upgrade(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Un *único pago* de por vida. Sin suscripciones, sin renovaciones. "
         "Pago dentro del chat con Stars, sin tarjetas ni redirects.",
         parse_mode=ParseMode.MARKDOWN,
-        reply_markup=kb.upgrade_options(STARS_PRO_PRICE, STARS_SHOP_PRICE),
+        reply_markup=kb.upgrade_options(STARS_PRO_PRICE),
     )
 
 
