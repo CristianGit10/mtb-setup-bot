@@ -17,7 +17,7 @@ from telegram.ext import (
 import db
 import formatting
 import logic
-from config import STARS_PRO_PRICE
+from config import PAYPAL_ME_LINK, PRO_PRICE_EUR
 from handlers import keyboards as kb
 from handlers.states import (
     MENU, USE_PROFILE, WEIGHT, DISCIPLINE, BIKE_TYPE, TERRAIN,
@@ -419,16 +419,28 @@ async def _finish_setup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ---------- paywall ----------
 
+def _paypal_text(user_id: int, intro: str) -> str:
+    return (
+        f"{intro}\n\n"
+        f"⭐ *Pro de por vida — {PRO_PRICE_EUR}€* (pago único, sin suscripción)\n\n"
+        f"1️⃣ Paga *{PRO_PRICE_EUR}€* con el botón de abajo (o a `{PAYPAL_ME_LINK}`)\n"
+        f"2️⃣ *MUY IMPORTANTE:* en el concepto/nota del pago escribe este código:\n"
+        f"`{user_id}`\n"
+        f"3️⃣ En cuanto reciba el pago activo tu Pro (suele ser en minutos).\n\n"
+        f"_Tu código es tu ID de Telegram. Cópialo tal cual en el pago._"
+    )
+
+
 async def _show_paywall(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = (
-        "🚧 *Has llegado al límite del plan gratuito* (3 consultas este mes).\n\n"
-        "Pásate al *Plan Pro de por vida* — un único pago, consultas ilimitadas para siempre. "
-        "Pago con Telegram Stars sin salir del chat."
+    user_id = update.effective_user.id
+    text = _paypal_text(
+        user_id,
+        "🚧 *Has llegado al límite del plan gratuito* (3 consultas este mes).",
     )
     await _send(
         update,
         text,
-        reply_markup=kb.upgrade_options(STARS_PRO_PRICE),
+        reply_markup=kb.upgrade_options(PAYPAL_ME_LINK, PRO_PRICE_EUR),
         parse_mode=ParseMode.MARKDOWN,
     )
 
@@ -498,25 +510,27 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     _, remaining = db.can_make_query(user)
-    text = (
-        f"📊 Plan *FREE* — te quedan *{remaining}* consultas este mes.\n\n"
-        "¿Quieres pasar a Pro?"
+    text = _paypal_text(
+        update.effective_user.id,
+        f"📊 Plan *FREE* — te quedan *{remaining}* consultas este mes.",
     )
     await update.message.reply_text(
         text,
         parse_mode=ParseMode.MARKDOWN,
-        reply_markup=kb.upgrade_options(STARS_PRO_PRICE),
+        reply_markup=kb.upgrade_options(PAYPAL_ME_LINK, PRO_PRICE_EUR),
     )
 
 
 async def cmd_upgrade(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Atajo para ver el paywall sin agotar consultas gratis."""
+    text = _paypal_text(
+        update.effective_user.id,
+        "⭐ *Pásate a Pro de por vida*",
+    )
     await update.message.reply_text(
-        "⭐ *Pásate a Pro con Telegram Stars*\n\n"
-        "Un *único pago* de por vida. Sin suscripciones, sin renovaciones. "
-        "Pago dentro del chat con Stars, sin tarjetas ni redirects.",
+        text,
         parse_mode=ParseMode.MARKDOWN,
-        reply_markup=kb.upgrade_options(STARS_PRO_PRICE),
+        reply_markup=kb.upgrade_options(PAYPAL_ME_LINK, PRO_PRICE_EUR),
     )
 
 

@@ -49,6 +49,14 @@ def get_user(telegram_user_id: int) -> Optional[dict]:
     return None
 
 
+def get_user_by_username(username: str) -> Optional[dict]:
+    username = username.lstrip("@")
+    res = supabase().table("users").select("*").ilike("username", username).execute()
+    if res.data:
+        return res.data[0]
+    return None
+
+
 PROFILE_FIELDS = (
     "weight_kg", "discipline", "bike_type",
     "front_width", "rear_width",
@@ -101,10 +109,19 @@ def increment_query_count(telegram_user_id: int) -> None:
         }).eq("telegram_user_id", telegram_user_id).execute()
 
 
-def activate_lifetime_plan(telegram_user_id: int, plan: str, charge_id: str) -> None:
-    """Activa plan Pro o Shop de por vida tras un pago con Telegram Stars."""
-    supabase().table("users").update({
-        "plan": plan,
-        "telegram_stars_charge_id": charge_id,
+def grant_lifetime(telegram_user_id: int, note: str = "paypal_manual") -> int:
+    """Activa Pro de por vida. Devuelve nº de filas afectadas (0 si el user no existe)."""
+    res = supabase().table("users").update({
+        "plan": "pro",
+        "telegram_stars_charge_id": note,
         "plan_renewal_at": None,  # lifetime: sin caducidad
     }).eq("telegram_user_id", telegram_user_id).execute()
+    return len(res.data or [])
+
+
+def revoke_plan(telegram_user_id: int) -> int:
+    """Revierte a free. Devuelve nº de filas afectadas."""
+    res = supabase().table("users").update({
+        "plan": "free",
+    }).eq("telegram_user_id", telegram_user_id).execute()
+    return len(res.data or [])

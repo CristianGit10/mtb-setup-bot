@@ -12,9 +12,10 @@ PORT = int(os.getenv("PORT", "8080"))
 
 FREE_MONTHLY_QUERIES = 3
 
-# --- Pagos con Telegram Stars (currency code XTR) ---
-# Pago ÚNICO de por vida. 1 star ≈ $0.013 USD ≈ €0.012.
-STARS_PRO_PRICE = int(os.getenv("STARS_PRO_PRICE", "250"))  # ≈ €4 (lifetime Pro)
+# --- Pagos con PayPal (manual) ---
+# El usuario paga al enlace y el dueño activa el plan con /grant.
+PAYPAL_ME_LINK = os.getenv("PAYPAL_ME_LINK", "https://paypal.me/CristianDuque315")
+PRO_PRICE_EUR = os.getenv("PRO_PRICE_EUR", "3")
 
-# Identificador del payload de la factura
-INVOICE_PAYLOAD_PRO = "lifetime:pro"
+# Solo este usuario puede usar los comandos de admin (/grant, /revoke).
+OWNER_TELEGRAM_ID = int(os.getenv("OWNER_TELEGRAM_ID", "700883093"))

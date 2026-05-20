@@ -1,8 +1,8 @@
 """Healthcheck HTTP para Railway/Render.
 
-Antes hospedaba el webhook de Lemon Squeezy. Con Telegram Stars los pagos llegan
-por el mismo canal de Telegram (pre_checkout_query + successful_payment),
-así que solo necesitamos un endpoint que devuelva 200 OK para el healthcheck.
+Los pagos son por PayPal manual (el dueño activa el plan con /grant), así que no
+hay webhook de pago. Solo necesitamos un endpoint que devuelva 200 OK para el
+healthcheck del hosting (y para que un pinger lo mantenga despierto en planes free).
 """
 from fastapi import FastAPI
 

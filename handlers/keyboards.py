@@ -125,13 +125,10 @@ def back_to_menu():
     ])
 
 
-def upgrade_options(pro_stars: int):
-    """Botón que dispara el envío de factura con Telegram Stars (pago único)."""
+def upgrade_options(paypal_url: str, price_eur: str):
+    """Botón que abre PayPal para el pago manual."""
     rows = [
-        [InlineKeyboardButton(
-            f"⭐ Pro de por vida · {pro_stars} stars",
-            callback_data="upgrade:pro",
-        )],
+        [InlineKeyboardButton(f"💳 Pagar {price_eur}€ en PayPal", url=paypal_url)],
         [InlineKeyboardButton("⬅️ Volver al menú", callback_data="back:menu")],
     ]
     return _kb(rows)
