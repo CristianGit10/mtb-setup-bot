@@ -1,5 +1,11 @@
 """Plantillas de respuesta del bot."""
 
+PSI_TO_BAR = 0.0689476
+
+
+def _bar(psi: float, decimals: int = 2) -> str:
+    return f"{psi * PSI_TO_BAR:.{decimals}f}"
+
 
 def _bike_label(profile: dict) -> str:
     discipline = profile.get("discipline", "")
@@ -21,10 +27,10 @@ def format_tires(profile: dict, tires: dict) -> str:
         f"🔧 TU SETUP MTB — {_bike_label(profile)}",
         "",
         f"🔵 RUEDA DELANTERA ({fw}\" {f_tubeless})",
-        f"→ {f_lo}–{f_hi} psi",
+        f"→ {f_lo}–{f_hi} psi  ({_bar(f_lo)}–{_bar(f_hi)} bar)",
         "",
         f"🟠 RUEDA TRASERA ({rw}\" {r_tubeless})",
-        f"→ {r_lo}–{r_hi} psi",
+        f"→ {r_lo}–{r_hi} psi  ({_bar(r_lo)}–{_bar(r_hi)} bar)",
     ]
     return "\n".join(lines)
 
@@ -33,7 +39,7 @@ def format_suspension(profile: dict, sus: dict) -> str:
     fork = f"{profile.get('fork_brand', 'Horquilla')} · {sus['fork_travel']}mm"
     lines = [
         f"⚙️ HORQUILLA ({fork})",
-        f"→ Presión: ~{sus['fork_pressure_psi']} psi (ajusta hasta el sag objetivo)",
+        f"→ Presión: ~{sus['fork_pressure_psi']} psi (~{_bar(sus['fork_pressure_psi'], 1)} bar) — ajusta hasta el sag objetivo",
         f"→ Sag objetivo: {sus['sag_mm']} mm ({sus['sag_pct']}%)",
         f"→ Rebote: {sus['rebound_clicks'][0]}–{sus['rebound_clicks'][1]} clics desde cerrado",
     ]
